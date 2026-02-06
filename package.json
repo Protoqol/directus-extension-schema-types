@@ -1,35 +1,36 @@
 {
-  "name": "@protoqol/directus-extension-schema-types",
-  "description": "Directus extension to generate Typescript (and more) schemas from a collection.",
-  "icon": "extension",
-  "version": "1.0.0",
-  "keywords": [
+  "name"              : "@protoqol/directus-extension-schema-types",
+  "description"       : "Directus extension to generate Typescript (and more) schemas from a collection.",
+  "license"           : "MIT",
+  "icon"              : "extension",
+  "version"           : "1.0.0",
+  "keywords"          : [
     "directus",
     "directus-extension",
     "directus-extension-module"
   ],
-  "type": "module",
-  "files": [
+  "type"              : "module",
+  "files"             : [
     "dist"
   ],
   "directus:extension": {
-    "type": "module",
-    "path": "dist/index.js",
+    "type"  : "module",
+    "path"  : "dist/index.js",
     "source": "src/index.ts",
-    "host": ">=10.10.0"
+    "host"  : ">=10.10.0"
   },
-  "scripts": {
-    "build": "directus-extension build",
-    "dev": "directus-extension build -w --no-minify",
-    "link": "directus-extension link",
+  "scripts"           : {
+    "build"   : "directus-extension build",
+    "dev"     : "directus-extension build -w --no-minify",
+    "link"    : "directus-extension link",
     "validate": "directus-extension validate"
   },
-  "devDependencies": {
+  "devDependencies"   : {
     "@directus/extensions-sdk": "17.0.5",
-    "typescript": "^5.9.3",
-    "vue": "^3.5.27"
+    "typescript"              : "^5.9.3",
+    "vue"                     : "^3.5.27"
   },
-  "dependencies": {
+  "dependencies"      : {
     "@highlightjs/vue-plugin": "^2.1.0"
   }
 }
