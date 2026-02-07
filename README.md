@@ -1,4 +1,4 @@
-![Title card](https://cms.protoqol.nl/assets/e2e36b88-ed51-44ae-9d07-91b710d05efc)
+![Title card](https://cms.protoqol.nl/assets/e2e36b88-ed51-44ae-9d07-91b710d05efc?v=2)
 
 ![NPM](https://img.shields.io/npm/v/%40protoqol%2Fdirectus-extension-schema-types)
 ![NPM](https://img.shields.io/github/actions/workflow/status/protoqol/directus-extension-schema-types/publish.yml)
@@ -50,3 +50,4 @@ Please open an issue on this repository. We're happy to hear back from you!
 ---
 
 Developed by [Protoqol](https://protoqol.nl/).
+
