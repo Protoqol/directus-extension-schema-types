@@ -20,15 +20,17 @@
     "host"  : ">=10.10.0"
   },
   "scripts"           : {
-    "build"   : "directus-extension build",
-    "dev"     : "directus-extension build -w --no-minify",
-    "link"    : "directus-extension link",
-    "validate": "directus-extension validate"
+    "build"     : "directus-extension build",
+    "dev"       : "directus-extension build -w --no-minify",
+    "link"      : "directus-extension link",
+    "validate"  : "directus-extension validate",
+    "type-check": "vue-tsc --noEmit"
   },
   "devDependencies"   : {
     "@directus/extensions-sdk": "17.0.5",
     "typescript"              : "^5.9.3",
-    "vue"                     : "^3.5.27"
+    "vue"                     : "^3.5.27",
+    "vue-tsc"                 : "^3.2.4"
   },
   "dependencies"      : {
     "@highlightjs/vue-plugin": "^2.1.0"

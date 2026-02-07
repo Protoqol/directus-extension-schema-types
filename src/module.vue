@@ -1,12 +1,18 @@
 <template>
   <private-view :title="collection ? `Schema for ${collection}` : 'Schemas'">
     <template #headline>
-      <p>protoqol/schema-types</p>
+      <div class="headline">
+        <p><a href="https://protoqol.nl" target="_blank">protoqol/schema-types</a></p>
+        <p class="feedback"><a href="https://github.com/Protoqol/directus-extension-schema-types/issues/new"
+                               target="_blank">Feedback
+          or issues?
+        </a></p>
+      </div>
     </template>
 
     <template #title-outer:prepend>
       <v-button class="header-icon" disabled icon rounded secondary>
-        <v-icon name="table"/>
+        <v-icon name="code"/>
       </v-button>
     </template>
 
@@ -46,20 +52,23 @@ import GeneratedType from "./components/generated_type.vue";
 
 export default defineComponent({
   components: {Fields, Collections, GeneratedType, Navigation},
-  props     : {
+
+  props: {
     collection: {
       type   : String,
       default: null,
     },
   },
+
   setup(props) {
-    const error = ref<string | null>(null);
+    const error = ref<string | undefined>(undefined);
     const selectedFields = ref<string[]>([]);
     const selectedCollections = ref<string[]>([]);
 
     let fieldsStore: any = null;
     let relationsStore: any = null;
     let collectionsStore: any = null;
+
     try {
       const stores = useStores();
       fieldsStore = stores.useFieldsStore();
@@ -97,7 +106,7 @@ export default defineComponent({
 
         const filtered = allFields.filter((f: any) => f.collection === props.collection);
 
-        const mappedRows = filtered.map((f: any) => {
+        return filtered.map((f: any) => {
           const relation = allRelations.find(
               (r: any) =>
                   (r.collection === props.collection && r.field === f.field) ||
@@ -131,15 +140,12 @@ export default defineComponent({
             relatedCollection: relatedCollection,
           };
         });
-
-        return mappedRows;
       } catch (e: any) {
         console.error("Error in rows computed:", e);
         return [];
       }
     });
 
-    // Initialize selectedFields when rows change and it's the first time for this collection
     watch(() => props.collection, () => {
       selectedFields.value = [];
     });
@@ -204,6 +210,23 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.headline {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  column-gap: 12px;
+}
+
+.headline .feedback {
+  font-weight: 400;
+  color: var(--theme--foreground-subdued);
+}
+
+.headline .feedback a {
+  color: inherit;
+}
+
 main {
   display: flex;
   gap: var(--content-padding);

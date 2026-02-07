@@ -22,10 +22,19 @@
         <v-select
             v-if="selectedLanguage === 'typescript'"
             v-model="tsTypeStyle"
-            :items="tsTypeStyles"
+            :items="currentLanguageOptions"
             :show-deselect="false"
             inline
             placeholder="Type Style"
+        />
+
+        <v-select
+            v-if="['php', 'java', 'python'].includes(selectedLanguage)"
+            v-model="languageVersion"
+            :items="currentLanguageOptions"
+            :placeholder="selectedLanguage === 'java' ? 'List Implementation' : (selectedLanguage === 'php' ? 'PHP Version' : 'Python Version')"
+            :show-deselect="false"
+            inline
         />
       </div>
     </div>
@@ -100,8 +109,19 @@ export default defineComponent({
   },
 
   setup(props) {
-    const selectedLanguage = ref("typescript");
-    const tsTypeStyle = ref("interface");
+    const updateOptions = (lang: string) => {
+      try {
+        const GeneratorClass = TypeGeneratorService.getGenerator(lang);
+        currentLanguageOptions.value = (GeneratorClass as any).getOptions();
+      } catch (e) {
+        currentLanguageOptions.value = [];
+      }
+    };
+
+    const selectedLanguage = ref(localStorage.getItem("schema-types-language") || "typescript");
+    updateOptions(selectedLanguage.value);
+    const tsTypeStyle = ref(localStorage.getItem("schema-types-ts-style") || "interface");
+    const languageVersion = ref(localStorage.getItem("schema-types-language-version") || "");
     const generatedCode = ref("");
 
     const {useFieldsStore, useRelationsStore} = useStores();
@@ -159,10 +179,8 @@ export default defineComponent({
       },
     ];
 
-    const tsTypeStyles = [
-      {text: "Interface", value: "interface"},
-      {text: "Type", value: "type"},
-    ];
+    const currentLanguageOptions = ref<{ text: string; value: string }[]>([]);
+
 
     const copyToClipboard = async () => {
       if (!generatedCode.value) {
@@ -175,7 +193,30 @@ export default defineComponent({
       }
     };
 
-    watch([selectedLanguage, tsTypeStyle, () => props.fields, () => props.selectedCollections, () => props.collection], async () => {
+    watch(selectedLanguage, (newLang) => {
+      localStorage.setItem("schema-types-language", newLang);
+      updateOptions(newLang);
+
+      if (newLang !== "php" && newLang !== "java" && newLang !== "python") {
+        languageVersion.value = "";
+      } else if (newLang === "php" && !["5.6", "7.4", "8.0", "8.1", "8.2"].includes(languageVersion.value)) {
+        languageVersion.value = "8.2";
+      } else if (newLang === "java" && !["arraylist", "vector"].includes(languageVersion.value)) {
+        languageVersion.value = "arraylist";
+      } else if (newLang === "python" && !["3.10", "3.9", "3.6"].includes(languageVersion.value)) {
+        languageVersion.value = "3.10";
+      }
+    });
+
+    watch(tsTypeStyle, (newStyle) => {
+      localStorage.setItem("schema-types-ts-style", newStyle);
+    });
+
+    watch(languageVersion, (newVersion) => {
+      localStorage.setItem("schema-types-language-version", newVersion);
+    });
+
+    watch([selectedLanguage, tsTypeStyle, languageVersion, () => props.fields, () => props.selectedCollections, () => props.collection], async () => {
       if ((!props.collection || props.fields.length === 0) && props.selectedCollections.length === 0) {
         generatedCode.value = "// No fields found";
         return;
@@ -206,8 +247,9 @@ export default defineComponent({
       };
 
       const generator = new TypeGeneratorService({
-        language   : selectedLanguage.value,
-        tsTypeStyle: tsTypeStyle.value,
+        language       : selectedLanguage.value,
+        tsTypeStyle    : tsTypeStyle.value,
+        languageVersion: languageVersion.value,
       });
 
       const mainFields = props.fields.map((f: any) => ({
@@ -226,8 +268,9 @@ export default defineComponent({
     return {
       selectedLanguage,
       tsTypeStyle,
+      languageVersion,
       languages,
-      tsTypeStyles,
+      currentLanguageOptions,
       generatedCode,
       copyToClipboard,
     };
@@ -238,8 +281,8 @@ export default defineComponent({
 <style scoped>
 .generated-type {
   background-color: var(--background-page);
-  border: var(--border-width) solid var(--border-subdued);
-  border-radius: var(--border-radius);
+  border: var(--theme--border-width) solid var(--border-subdued);
+  border-radius: var(--theme--border-radius);
   padding: 16px;
   min-height: 400px;
   display: flex;
@@ -251,7 +294,7 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  border-bottom: var(--border-width) solid var(--border-subdued);
+  border-bottom: var(--theme--border-width) solid var(--border-subdued);
   padding-bottom: 10px;
   flex: 0 0 auto;
 }
@@ -286,13 +329,13 @@ export default defineComponent({
 }
 
 .content {
-  border-radius: var(--border-radius);
+  border-radius: var(--theme--border-radius);
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background-color: var(--background-subdued);
-  border: var(--border-width) solid var(--border-subdued);
+  border: var(--theme--border-width) solid var(--border-subdued);
 }
 
 .code-container {
@@ -322,11 +365,12 @@ export default defineComponent({
   font-weight: 400;
   font-size: 13px;
   line-height: 1.5;
-  background-color: var(--background-subdued) !important;
+  background-color: #f9fafb !important;
   color: var(--foreground-normal);
   white-space: pre;
   overflow: auto;
   tab-size: 2;
+  border-radius: 8px;
 }
 
 .generated-code :deep(code) {

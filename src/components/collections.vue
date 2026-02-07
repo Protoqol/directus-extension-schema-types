@@ -45,7 +45,7 @@ export default defineComponent({
   name : "collections",
   props: {
     collections        : {
-      type   : Array,
+      type   : Array<{ collection: string }>,
       default: () => [],
     },
     selectedCollections: {
@@ -90,38 +90,37 @@ export default defineComponent({
 .v-table thead th {
   padding: 8px 12px;
   text-align: left;
-  color: var(--foreground-subdued);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
+
+  color: var(--theme--foreground-accent);
+  font-size: 16px;
+  font-weight: var(--theme--form--field--label--font-weight);
+  font-family: var(--theme--form--field--label--font-family);
 }
 
 .v-table tbody tr {
   cursor: pointer;
-  background-color: #f9fafb;
-  transition: background-color 0.2s ease;
 }
 
 .v-table tbody tr:hover {
-  background-color: var(--background-subdued);
+  border-color: var(--theme--border-color-accent);
 }
 
 .v-table td {
-  padding: 12px;
-  border-top: var(--border-width) solid var(--border-subdued);
-  border-bottom: var(--border-width) solid var(--border-subdued);
+  padding: 16px 12px;
+  border-top: var(--theme--border-width) solid var(--theme--border-color-subdued);
+  border-bottom: var(--theme--border-width) solid var(--theme--border-color-subdued);
 }
 
 .v-table td:first-child {
-  border-left: var(--border-width) solid var(--border-subdued);
-  border-top-left-radius: var(--border-radius);
-  border-bottom-left-radius: var(--border-radius);
+  border-left: var(--theme--border-width) solid var(--theme--border-color-subdued);
+  border-top-left-radius: var(--theme--border-radius);
+  border-bottom-left-radius: var(--theme--border-radius);
 }
 
 .v-table td:last-child {
-  border-right: var(--border-width) solid var(--border-subdued);
-  border-top-right-radius: var(--border-radius);
-  border-bottom-right-radius: var(--border-radius);
+  border-right: var(--theme--border-width) solid var(--theme--border-color-subdued);
+  border-top-right-radius: var(--theme--border-radius);
+  border-bottom-right-radius: var(--theme--border-radius);
 }
 
 .selection {
@@ -136,7 +135,8 @@ export default defineComponent({
 }
 
 .name {
-  font-weight: 600;
-  color: var(--foreground-normal);
+  font-family: var(--theme--fonts--monospace--font-family);
+  font-size: 14px;
+  color: var(--theme--foreground);
 }
 </style>
