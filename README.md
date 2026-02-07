@@ -23,7 +23,7 @@ There are a few different ways to install this extension:
 
 1.
     - (Recommended) Via Directus Marketplace search for `schema-types` or go to
-      `{{ YOUR_DIRECTUS_URL }}/admin/settings/marketplace/extension/!!TODO!!` // Coming soon!
+      `{{ YOUR_DIRECTUS_URL }}/admin/settings/marketplace/extension/41ae62cf-ee7f-483f-80d9-5572690a2976`
     - Self-hosted: see [Directus Docs](https://directus.io/docs/self-hosting/including-extensions) to install
       extensions.
 2. Enable the module in Settings > Modules > Module Bar > Schema Types.
@@ -50,4 +50,5 @@ Please open an issue on this repository. We're happy to hear back from you!
 ---
 
 Developed by [Protoqol](https://protoqol.nl/).
+
 
