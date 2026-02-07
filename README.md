@@ -40,7 +40,7 @@ Wondering what the generated code looks like?
 ---
 
 ![Preview Python 3.9](https://cms.protoqol.nl/assets/209316ac-e033-4190-85f4-e5d529649796?v=2)
-> Converting all collections in one go to Python 3.9!
+> Converting all collections to Python 3.9 has never been easier.
 ---
 
 ## Feedback, suggestions or issues?
