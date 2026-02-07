@@ -3,7 +3,7 @@ import ModuleComponent from "./module.vue";
 
 export default defineModule({
     id    : "protoqol/schema",
-    name  : "Typescript Schema",
+    name  : "Schema Types",
     icon  : "data_array",
     color : "#007bff",
     hidden: false,

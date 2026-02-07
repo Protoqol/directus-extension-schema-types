@@ -1,6 +1,11 @@
 import {BaseGenerator, FieldInfo} from "./base-generator";
 
 export class GoGenerator extends BaseGenerator {
+
+    public override getPrefix(_allCollectionNames?: Set<string>): string {
+        return "// Minimum supported Go version: 1.18+\n\n";
+    }
+
     public generateForCollection(collection: string, fields: FieldInfo[]): string {
         const collectionName = this.toPascalCase(collection);
 
@@ -15,7 +20,7 @@ export class GoGenerator extends BaseGenerator {
 
             if (row.relatedCollection) {
                 goType = this.toPascalCase(row.relatedCollection);
-                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m")) {
+                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m") || row.special.includes("o2m")) {
                     goType = `[]${goType}`;
                 }
             }
@@ -23,11 +28,12 @@ export class GoGenerator extends BaseGenerator {
             let fieldName = this.toPascalCase(row.field);
 
             const reserved = this.getReservedKeywords();
+
             if (reserved.has(row.field) || reserved.has(fieldName)) {
                 fieldName = `Custom${fieldName}`;
             }
 
-            if (!row.required && !goType.startsWith("[]")) {
+            if (!row.required && !goType.startsWith("[]") && !goType.startsWith("map") && !goType.startsWith("interface")) {
                 code += `  ${fieldName} *${goType} \`json:"${row.field}"\`\n`;
             } else {
                 code += `  ${fieldName} ${goType} \`json:"${row.field}"\`\n`;
@@ -39,28 +45,36 @@ export class GoGenerator extends BaseGenerator {
         return code;
     }
 
-    public generateCustomTypes(usedGeometryTypes: Set<string>): string {
-        this.usedGeometryTypes = usedGeometryTypes;
-        let code = "";
+    public generateCustomTypes(usedGeometryTypes?: Set<string>): string {
+        if (usedGeometryTypes) {
+            this.usedGeometryTypes = usedGeometryTypes;
+        }
+        let code = "// Geometry types\n";
 
         if (this.usedGeometryTypes.has("geometry.Point")) {
             code += `type Point struct { Type string \`json:"type"\`; Coordinates [2]float64 \`json:"coordinates"\` }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.LineString")) {
             code += `type LineString struct { Type string \`json:"type"\`; Coordinates [][2]float64 \`json:"coordinates"\` }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.Polygon")) {
             code += `type Polygon struct { Type string \`json:"type"\`; Coordinates [][][2]float64 \`json:"coordinates"\` }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiPoint")) {
             code += `type MultiPoint struct { Type string \`json:"type"\`; Coordinates [][2]float64 \`json:"coordinates"\` }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiLineString")) {
             code += `type MultiLineString struct { Type string \`json:"type"\`; Coordinates [][][2]float64 \`json:"coordinates"\` }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiPolygon")) {
             code += `type MultiPolygon struct { Type string \`json:"type"\`; Coordinates [][][][2]float64 \`json:"coordinates"\` }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry")) {
             code += `type Geometry interface{} \n`;
         }

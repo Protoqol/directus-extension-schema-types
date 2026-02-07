@@ -29,7 +29,7 @@
         />
 
         <v-select
-            v-if="['php', 'java', 'python'].includes(selectedLanguage)"
+            v-if="currentLanguageOptions.length > 1 && selectedLanguage !== 'typescript'"
             v-model="languageVersion"
             :items="currentLanguageOptions"
             :placeholder="selectedLanguage === 'java' ? 'List Implementation' : (selectedLanguage === 'php' ? 'PHP Version' : 'Python Version')"
@@ -44,6 +44,7 @@
           <v-icon name="content_copy"/>
         </v-button>
         <highlightjs
+            :autodetect="false"
             :code="generatedCode"
             :language="selectedLanguage"
             class="generated-code"
@@ -109,24 +110,58 @@ export default defineComponent({
   },
 
   setup(props) {
+    const {useFieldsStore, useRelationsStore} = useStores();
+    const fieldsStore = useFieldsStore();
+    const relationsStore = useRelationsStore();
+
+    const currentLanguageOptions = ref<{ text: string; value: string }[]>([]);
+
     const updateOptions = (lang: string) => {
       try {
         const GeneratorClass = TypeGeneratorService.getGenerator(lang);
         currentLanguageOptions.value = (GeneratorClass as any).getOptions();
       } catch (e) {
+        console.error(e);
         currentLanguageOptions.value = [];
       }
     };
 
     const selectedLanguage = ref(localStorage.getItem("schema-types-language") || "typescript");
     updateOptions(selectedLanguage.value);
+
     const tsTypeStyle = ref(localStorage.getItem("schema-types-ts-style") || "interface");
     const languageVersion = ref(localStorage.getItem("schema-types-language-version") || "");
     const generatedCode = ref("");
 
-    const {useFieldsStore, useRelationsStore} = useStores();
-    const fieldsStore = useFieldsStore();
-    const relationsStore = useRelationsStore();
+    const getRelatedCollection = (field: any) => {
+      if (!field || !relationsStore.relations) {
+        return null;
+      }
+      const relation = relationsStore.relations.find(
+          (r: any) =>
+              (r.collection === field.collection && r.field === field.field) ||
+              (r.related_collection === field.collection && r.meta?.one_field === field.field),
+      );
+
+      if (relation) {
+        return relation.collection === field.collection ? relation.related_collection : relation.collection;
+      }
+      return null;
+    };
+
+    const getMappedFields = (collection: string) => {
+      if (!fieldsStore.fields) {
+        return [];
+      }
+      const relatedFields = fieldsStore.fields.filter((field: any) => field.collection === collection);
+      return relatedFields.map((field: any) => ({
+        field            : field.field || "unknown",
+        type             : field.type || "unknown",
+        required         : field.schema ? field.schema.is_nullable === false : field.meta?.required === true,
+        special          : Array.isArray(field.special) ? field.special : (field.meta?.special ? (Array.isArray(field.meta.special) ? field.meta.special : [field.meta.special]) : []),
+        relatedCollection: getRelatedCollection(field),
+      }));
+    };
 
     const languages = [
       {
@@ -179,8 +214,6 @@ export default defineComponent({
       },
     ];
 
-    const currentLanguageOptions = ref<{ text: string; value: string }[]>([]);
-
 
     const copyToClipboard = async () => {
       if (!generatedCode.value) {
@@ -197,15 +230,19 @@ export default defineComponent({
       localStorage.setItem("schema-types-language", newLang);
       updateOptions(newLang);
 
-      if (newLang !== "php" && newLang !== "java" && newLang !== "python") {
-        languageVersion.value = "";
-      } else if (newLang === "php" && !["5.6", "7.4", "8.0", "8.1", "8.2"].includes(languageVersion.value)) {
-        languageVersion.value = "8.2";
-      } else if (newLang === "java" && !["arraylist", "vector"].includes(languageVersion.value)) {
-        languageVersion.value = "arraylist";
-      } else if (newLang === "python" && !["3.10", "3.9", "3.6"].includes(languageVersion.value)) {
-        languageVersion.value = "3.10";
+      if (currentLanguageOptions.value.length > 0) {
+        languageVersion.value = currentLanguageOptions.value[0]?.value || "";
       }
+
+      // if (newLang !== "php" && newLang !== "java" && newLang !== "python") {
+      //   languageVersion.value = "";
+      // } else if (newLang === "php" && !["5.6", "7.4", "8.0", "8.1", "8.2"].includes(languageVersion.value)) {
+      //   languageVersion.value = "8.2";
+      // } else if (newLang === "java" && !["arraylist", "vector"].includes(languageVersion.value)) {
+      //   languageVersion.value = "arraylist";
+      // } else if (newLang === "python" && !["3.10", "3.9", "3.6"].includes(languageVersion.value)) {
+      //   languageVersion.value = "3.10";
+      // }
     });
 
     watch(tsTypeStyle, (newStyle) => {
@@ -217,34 +254,10 @@ export default defineComponent({
     });
 
     watch([selectedLanguage, tsTypeStyle, languageVersion, () => props.fields, () => props.selectedCollections, () => props.collection], async () => {
-      if ((!props.collection || props.fields.length === 0) && props.selectedCollections.length === 0) {
+      if (!props.fields || ((!props.collection || props.fields.length === 0) && (!props.selectedCollections || props.selectedCollections.length === 0))) {
         generatedCode.value = "// No fields found";
         return;
       }
-
-      const getMappedFields = (collection: string) => {
-        const relatedFields = fieldsStore.fields.filter((field: any) => field.collection === collection);
-        return relatedFields.map((field: any) => ({
-          field            : field.field || "unknown",
-          type             : field.type || "unknown",
-          required         : field.schema ? field.schema.is_nullable === false : field.meta?.required === true,
-          special          : Array.isArray(field.special) ? field.special : (field.meta?.special ? (Array.isArray(field.meta.special) ? field.meta.special : [field.meta.special]) : []),
-          relatedCollection: getRelatedCollection(field),
-        }));
-      };
-
-      const getRelatedCollection = (field: any) => {
-        const relation = relationsStore.relations.find(
-            (r: any) =>
-                (r.collection === field.collection && r.field === field.field) ||
-                (r.related_collection === field.collection && r.meta?.one_field === field.field),
-        );
-
-        if (relation) {
-          return relation.collection === field.collection ? relation.related_collection : relation.collection;
-        }
-        return null;
-      };
 
       const generator = new TypeGeneratorService({
         language       : selectedLanguage.value,
@@ -252,17 +265,25 @@ export default defineComponent({
         languageVersion: languageVersion.value,
       });
 
-      const mainFields = props.fields.map((f: any) => ({
-        ...f,
-        relatedCollection: getRelatedCollection(fieldsStore.fields.find((field: any) => field.collection === props.collection && field.field === f.field)),
-      }));
+      const mainFields = props.fields.map((f: any) => {
+        const fieldData = fieldsStore.fields ? fieldsStore.fields.find((field: any) => field.collection === props.collection && field.field === f.field) : null;
+        return {
+          ...f,
+          relatedCollection: getRelatedCollection(fieldData),
+        };
+      });
 
-      generatedCode.value = await generator.generate(
-          props.collection,
-          mainFields,
-          props.selectedCollections as string[],
-          getMappedFields,
-      );
+      try {
+        generatedCode.value = await generator.generate(
+            props.collection,
+            mainFields,
+            props.selectedCollections as string[],
+            getMappedFields,
+        );
+      } catch (err) {
+        console.error("Error during generation:", err);
+        generatedCode.value = "// Error during generation: " + (err as Error).message;
+      }
     }, {immediate: true});
 
     return {

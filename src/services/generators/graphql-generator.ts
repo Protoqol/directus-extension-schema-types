@@ -1,9 +1,15 @@
 import {BaseGenerator, FieldInfo} from "./base-generator";
 
 export class GraphQLGenerator extends BaseGenerator {
+    public override getPrefix(_allCollectionNames?: Set<string>): string {
+        return "# Minimum supported GraphQL version: October 2021\n\n";
+    }
+
     public generateForCollection(collection: string, fields: FieldInfo[]): string {
         const collectionName = this.toPascalCase(collection);
+
         let code = `type ${collectionName} {\n`;
+
         fields.forEach((row) => {
             let gqlType = this.getMappedType(row.type) || "Json";
 
@@ -13,40 +19,54 @@ export class GraphQLGenerator extends BaseGenerator {
 
             if (row.relatedCollection) {
                 gqlType = this.toPascalCase(row.relatedCollection);
-                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m")) {
+                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m") || row.special.includes("o2m")) {
                     gqlType = `[${gqlType}]`;
                 }
             }
+
             code += `  ${row.field}: ${gqlType}${row.required ? "!" : ""}\n`;
         });
+
         code += "}\n\n";
+
         return code;
     }
 
-    public generateCustomTypes(usedGeometryTypes: Set<string>): string {
-        this.usedGeometryTypes = usedGeometryTypes;
+    public generateCustomTypes(usedGeometryTypes?: Set<string>): string {
+        if (usedGeometryTypes) {
+            this.usedGeometryTypes = usedGeometryTypes;
+        }
+
         let code = "";
+
         if (this.usedGeometryTypes.has("geometry.Point")) {
             code += `type Point { type: String!, coordinates: [Float!]! }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.LineString")) {
             code += `type LineString { type: String!, coordinates: [[Float!]!]! }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.Polygon")) {
             code += `type Polygon { type: String!, coordinates: [[[Float!]!]!]! }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiPoint")) {
             code += `type MultiPoint { type: String!, coordinates: [[Float!]!]! }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiLineString")) {
             code += `type MultiLineString { type: String!, coordinates: [[[Float!]!]!]! }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiPolygon")) {
             code += `type MultiPolygon { type: String!, coordinates: [[[[Float!]!]!]!]! }\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry")) {
             code += `union Geometry = Point | LineString | Polygon | MultiPoint | MultiLineString | MultiPolygon\n`;
         }
+
         return code;
     }
 

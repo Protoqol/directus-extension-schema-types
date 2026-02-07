@@ -1,14 +1,14 @@
 <template>
   <v-list nav>
-    <v-list-item key="main" to="/protoqol/schema">
+    <v-list-item key="main" exact to="/protoqol/schema">
       <v-list-item-icon>
-        <v-icon name="dataset"/>
+        <v-icon name="data_table"/>
       </v-list-item-icon>
       <v-list-item-content>
-        <v-list-item-title>All</v-list-item-title>
+        <v-list-item-title>All collections</v-list-item-title>
       </v-list-item-content>
     </v-list-item>
-
+    <v-divider/>
     <v-list-item v-for="col in collections" :key="col.collection"
                  :to="`/protoqol/schema/${col.collection}`">
       <v-list-item-icon>
@@ -37,6 +37,9 @@ export default defineComponent({
     const collectionsStore = useCollectionsStore();
 
     const collections = computed(() => {
+      if (!collectionsStore || !collectionsStore.collections) {
+        return [];
+      }
       return collectionsStore.collections.filter((c: any) => !c.collection.startsWith("directus_"));
     });
 

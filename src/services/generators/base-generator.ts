@@ -33,14 +33,20 @@ export abstract class BaseGenerator {
         return [];
     }
 
+    public reset(): void {
+        this.usedGeometryTypes.clear();
+    }
+
     public abstract generateForCollection(collection: string, fields: FieldInfo[]): string;
 
-    public generateCustomTypes(usedGeometryTypes: Set<string>): string {
-        this.usedGeometryTypes = usedGeometryTypes;
+    public generateCustomTypes(usedGeometryTypes?: Set<string>): string {
+        if (usedGeometryTypes) {
+            this.usedGeometryTypes = usedGeometryTypes;
+        }
         return "";
     }
 
-    public getPrefix(): string {
+    public getPrefix(_allCollectionNames?: Set<string>): string {
         return "";
     }
 

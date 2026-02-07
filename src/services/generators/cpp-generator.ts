@@ -1,9 +1,25 @@
 import {BaseGenerator, FieldInfo} from "./base-generator";
 
 export class CPPGenerator extends BaseGenerator {
+    public override getPrefix(allCollectionNames?: Set<string>): string {
+        let prefix = "// Minimum supported C++ version: C++17\n";
+        prefix += "#include <string>\n#include <vector>\n#include <memory>\n#include <optional>\n#include <any>\n#include <array>\n\n";
+
+        if (allCollectionNames && allCollectionNames.size > 1) {
+            allCollectionNames.forEach(name => {
+                prefix += `struct ${this.toPascalCase(name)};\n`;
+            });
+            prefix += "\n";
+        }
+
+        return prefix;
+    }
+
     public generateForCollection(collection: string, fields: FieldInfo[]): string {
         const collectionName = this.toPascalCase(collection);
+
         let code = `struct ${collectionName} {\n`;
+
         fields.forEach((row) => {
             let cppType = this.getMappedType(row.type) || "void*";
 
@@ -11,55 +27,72 @@ export class CPPGenerator extends BaseGenerator {
                 this.usedGeometryTypes.add(row.type);
             }
 
+            let isRelation = false;
             if (row.relatedCollection) {
+                isRelation = true;
                 cppType = this.toPascalCase(row.relatedCollection);
-                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m")) {
+                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m") || row.special.includes("o2m")) {
                     cppType = `std::vector<std::weak_ptr<${cppType}>>`;
                 } else {
                     cppType = `std::shared_ptr<${cppType}>`;
                 }
             }
 
+            const isVector = cppType.startsWith("std::vector");
+
+            if (!row.required && !isRelation && !isVector) {
+                cppType = `std::optional<${cppType}>`;
+            }
+
             let fieldName = row.field;
+
             if (this.getReservedKeywords().has(fieldName)) {
                 fieldName = `custom_${fieldName}`;
             }
 
             code += `  ${cppType} ${fieldName};\n`;
         });
+
         code += `};\n\n`;
+
         return code;
     }
 
-    public generateCustomTypes(usedGeometryTypes: Set<string>): string {
-        this.usedGeometryTypes = usedGeometryTypes;
-        let code = "";
+    public generateCustomTypes(usedGeometryTypes?: Set<string>): string {
+        if (usedGeometryTypes) {
+            this.usedGeometryTypes = usedGeometryTypes;
+        }
+        let code = "// Geometry types\n";
+
         if (this.usedGeometryTypes.has("geometry.Point")) {
             code += `struct Point { std::string type = "Point"; std::array<double, 2> coordinates; };\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.LineString")) {
             code += `struct LineString { std::string type = "LineString"; std::vector<std::array<double, 2>> coordinates; };\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.Polygon")) {
             code += `struct Polygon { std::string type = "Polygon"; std::vector<std::vector<std::array<double, 2>>> coordinates; };\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiPoint")) {
             code += `struct MultiPoint { std::string type = "MultiPoint"; std::vector<std::array<double, 2>> coordinates; };\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiLineString")) {
             code += `struct MultiLineString { std::string type = "MultiLineString"; std::vector<std::vector<std::array<double, 2>>> coordinates; };\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiPolygon")) {
             code += `struct MultiPolygon { std::string type = "MultiPolygon"; std::vector<std::vector<std::vector<std::array<double, 2>>>> coordinates; };\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry")) {
             code += `struct Geometry { };\n`;
         }
-        return code;
-    }
 
-    public getPrefix(): string {
-        return "#include <string>\n#include <vector>\n#include <memory>\n#include <optional>\n#include <any>\n#include <array>\n\n";
+        return code;
     }
 
     protected getTypeMap(): Record<string, string> {

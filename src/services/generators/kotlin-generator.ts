@@ -1,9 +1,36 @@
 import {BaseGenerator, FieldInfo} from "./base-generator";
 
 export class KotlinGenerator extends BaseGenerator {
+    public static override getOptions(): { text: string; value: string }[] {
+        return [
+            {text: "Standard", value: "standard"},
+            {text: "kotlinx.serialization", value: "kotlinx_serialization"},
+        ];
+    }
+
+    public override getPrefix(_allCollectionNames?: Set<string>): string {
+        let prefix = "// Minimum supported Kotlin version: 1.0+\n";
+
+        if (this.options.languageVersion === "kotlinx_serialization") {
+            prefix += "import kotlinx.serialization.Serializable\n";
+        }
+
+        prefix += "\n";
+
+        return prefix;
+    }
+
     public generateForCollection(collection: string, fields: FieldInfo[]): string {
         const collectionName = this.toPascalCase(collection);
-        let code = `data class ${collectionName}(\n`;
+
+        let code = "";
+
+        if (this.options.languageVersion === "kotlinx_serialization") {
+            code += "@Serializable\n";
+        }
+
+        code += `data class ${collectionName}(\n`;
+
         fields.forEach((row, index) => {
             let kotlinType = this.getMappedType(row.type) || "Any";
 
@@ -13,40 +40,56 @@ export class KotlinGenerator extends BaseGenerator {
 
             if (row.relatedCollection) {
                 kotlinType = this.toPascalCase(row.relatedCollection);
-                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m")) {
+
+                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m") || row.special.includes("o2m")) {
                     kotlinType = `List<${kotlinType}>`;
                 }
             }
+
             code += `  val ${row.field}: ${kotlinType}${row.required ? "" : "?"}${index === fields.length - 1 ? "" : ","}\n`;
         });
+
         code += ")\n\n";
+
         return code;
     }
 
-    public generateCustomTypes(usedGeometryTypes: Set<string>): string {
-        this.usedGeometryTypes = usedGeometryTypes;
+    public generateCustomTypes(usedGeometryTypes?: Set<string>): string {
+        if (usedGeometryTypes) {
+            this.usedGeometryTypes = usedGeometryTypes;
+        }
+
         let code = "";
+        const serializable = this.options.languageVersion === "kotlinx_serialization" ? "@Serializable\n" : "";
+
         if (this.usedGeometryTypes.has("geometry.Point")) {
-            code += `data class Point(val type: String = "Point", val coordinates: DoubleArray)\n`;
+            code += `${serializable}data class Point(val type: String = "Point", val coordinates: DoubleArray)\n\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.LineString")) {
-            code += `data class LineString(val type: String = "LineString", val coordinates: List<DoubleArray>)\n`;
+            code += `${serializable}data class LineString(val type: String = "LineString", val coordinates: List<DoubleArray>)\n\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.Polygon")) {
-            code += `data class Polygon(val type: String = "Polygon", val coordinates: List<List<DoubleArray>>)\n`;
+            code += `${serializable}data class Polygon(val type: String = "Polygon", val coordinates: List<List<DoubleArray>>)\n\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiPoint")) {
-            code += `data class MultiPoint(val type: String = "MultiPoint", val coordinates: List<DoubleArray>)\n`;
+            code += `${serializable}data class MultiPoint(val type: String = "MultiPoint", val coordinates: List<DoubleArray>)\n\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiLineString")) {
-            code += `data class MultiLineString(val type: String = "MultiLineString", val coordinates: List<List<DoubleArray>>)\n`;
+            code += `${serializable}data class MultiLineString(val type: String = "MultiLineString", val coordinates: List<List<DoubleArray>>)\n\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry.MultiPolygon")) {
-            code += `data class MultiPolygon(val type: String = "MultiPolygon", val coordinates: List<List<List<DoubleArray>>>)\n`;
+            code += `${serializable}data class MultiPolygon(val type: String = "MultiPolygon", val coordinates: List<List<List<DoubleArray>>>)\n\n`;
         }
+
         if (this.usedGeometryTypes.has("geometry")) {
             code += `interface Geometry\n`;
         }
+
         return code;
     }
 

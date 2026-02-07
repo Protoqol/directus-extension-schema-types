@@ -27,7 +27,7 @@ export class TypeScriptGenerator extends BaseGenerator {
 
             if (row.relatedCollection) {
                 tsType = this.toPascalCase(row.relatedCollection);
-                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m")) {
+                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m") || row.special.includes("o2m")) {
                     tsType += "[]";
                 }
             }
@@ -37,8 +37,10 @@ export class TypeScriptGenerator extends BaseGenerator {
         return code;
     }
 
-    public generateCustomTypes(usedGeometryTypes: Set<string>): string {
-        this.usedGeometryTypes = usedGeometryTypes;
+    public generateCustomTypes(usedGeometryTypes?: Set<string>): string {
+        if (usedGeometryTypes) {
+            this.usedGeometryTypes = usedGeometryTypes;
+        }
         let code = "";
 
         if (this.usedGeometryTypes.has("geometry.Point")) {

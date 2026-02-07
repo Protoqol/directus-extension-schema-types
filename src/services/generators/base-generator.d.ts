@@ -21,7 +21,7 @@ export declare abstract class BaseGenerator {
     }[];
     abstract generateForCollection(collection: string, fields: FieldInfo[]): string;
     generateCustomTypes(usedGeometryTypes: Set<string>): string;
-    getPrefix(): string;
+    getPrefix(allCollectionNames?: Set<string>): string;
     protected abstract getTypeMap(): Record<string, string>;
     protected abstract getReservedKeywords(): Set<string>;
     protected getMappedType(type: string): string | null;

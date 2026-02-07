@@ -11,9 +11,21 @@ export class PHPGenerator extends BaseGenerator {
         ];
     }
 
+    public override getPrefix(_allCollectionNames?: Set<string>): string {
+        let prefix = "<?php\n\n";
+
+        if (this.options.languageVersion) {
+            prefix += `// Minimum supported PHP version: ${this.options.languageVersion}\n\n`;
+        }
+
+        return prefix;
+    }
+
     public generateForCollection(collection: string, fields: FieldInfo[]): string {
         const collectionName = this.toPascalCase(collection);
+
         let code = `class ${collectionName}\n{\n`;
+
         fields.forEach((row) => {
             let phpType = this.getMappedType(row.type) || "mixed";
 
@@ -23,12 +35,13 @@ export class PHPGenerator extends BaseGenerator {
 
             if (row.relatedCollection) {
                 phpType = this.toPascalCase(row.relatedCollection);
-                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m")) {
+                if (row.type === "o2m" || row.type === "m2m" || row.special.includes("m2m") || row.special.includes("o2m")) {
                     phpType = "array";
                 }
             }
 
             let fieldName = row.field;
+
             if (this.getReservedKeywords().has(fieldName)) {
                 fieldName = `custom_${fieldName}`;
             }
@@ -49,40 +62,44 @@ export class PHPGenerator extends BaseGenerator {
                 code += `    public ${isReadonly ? "readonly " : ""}${row.required ? "" : "?"}${phpType} $${fieldName};\n`;
             }
         });
+
         code += `}\n\n`;
+
         return code;
     }
 
-    public generateCustomTypes(usedGeometryTypes: Set<string>): string {
-        this.usedGeometryTypes = usedGeometryTypes;
-        let code = "";
+    public generateCustomTypes(usedGeometryTypes?: Set<string>): string {
+        if (usedGeometryTypes) {
+            this.usedGeometryTypes = usedGeometryTypes;
+        }
+
+        let code = "// Geometry types\n";
+
         if (this.usedGeometryTypes.has("geometry.Point")) {
-            code += `class Point { public string $type = 'Point'; public array $coordinates; }\n`;
+            code += `class Point {\n    public string $type = 'Point';\n    public array $coordinates; \n}\n\n`;
         }
-        if (this.usedGeometryTypes.has("geometry.LineString")) {
-            code += `class LineString { public string $type = 'LineString'; public array $coordinates; }\n`;
-        }
-        if (this.usedGeometryTypes.has("geometry.Polygon")) {
-            code += `class Polygon { public string $type = 'Polygon'; public array $coordinates; }\n`;
-        }
-        if (this.usedGeometryTypes.has("geometry.MultiPoint")) {
-            code += `class MultiPoint { public string $type = 'MultiPoint'; public array $coordinates; }\n`;
-        }
-        if (this.usedGeometryTypes.has("geometry.MultiLineString")) {
-            code += `class MultiLineString { public string $type = 'MultiLineString'; public array $coordinates; }\n`;
-        }
-        if (this.usedGeometryTypes.has("geometry.MultiPolygon")) {
-            code += `class MultiPolygon { public string $type = 'MultiPolygon'; public array $coordinates; }\n`;
-        }
-        if (this.usedGeometryTypes.has("geometry")) {
-            code += `class Geometry { }\n`;
-        }
-        return code;
-    }
 
-    public getPrefix(): string {
-        let prefix = "<?php\n\n";
-        return prefix;
+        if (this.usedGeometryTypes.has("geometry.LineString")) {
+            code += `class LineString {\n    public string $type = 'LineString';\n    public array $coordinates; \n}\n\n`;
+        }
+
+        if (this.usedGeometryTypes.has("geometry.Polygon")) {
+            code += `class Polygon {\n    public string $type = 'Polygon';\n    public array $coordinates; \n}\n\n`;
+        }
+
+        if (this.usedGeometryTypes.has("geometry.MultiPoint")) {
+            code += `class MultiPoint {\n    public string $type = 'MultiPoint';\n    public array $coordinates; \n}\n\n`;
+        }
+
+        if (this.usedGeometryTypes.has("geometry.MultiLineString")) {
+            code += `class MultiLineString {\n    public string $type = 'MultiLineString';\n    public array $coordinates; \n}\n\n`;
+        }
+
+        if (this.usedGeometryTypes.has("geometry.MultiPolygon")) {
+            code += `class MultiPolygon {\n    public string $type = 'MultiPolygon';\n    public array $coordinates; \n}\n\n`;
+        }
+
+        return code;
     }
 
     protected getTypeMap(): Record<string, string> {

@@ -1,13 +1,18 @@
 import {BaseGenerator, FieldInfo} from "./base-generator";
 
 export class SQLGenerator extends BaseGenerator {
+    public override getPrefix(_allCollectionNames?: Set<string>): string {
+        return "";
+    }
+
     public generateForCollection(collection: string, fields: FieldInfo[]): string {
-        let code = `CREATE TABLE ${collection.toLowerCase()}
-                    (  `;
+        let code = `CREATE TABLE ${collection.toLowerCase()} (\n`;
+
         fields.forEach((row, index) => {
             let sqlType = this.getMappedType(row.type) || "TEXT";
-            code += `  ${row.field} ${sqlType}${row.required ? " NOT NULL" : ""}${index === fields.length - 1 ? "" : ","}\n`;
+            code += `  \`${row.field}\` ${sqlType}${row.required ? " NOT NULL" : ""}${index === fields.length - 1 ? "" : ","}\n`;
         });
+
         code += ");\n\n";
         return code;
     }

@@ -17,7 +17,7 @@
     </template>
 
     <template #navigation>
-      <navigation #navigation :collection="collection"/>
+      <navigation :collection="collection"/>
     </template>
 
     <main>
@@ -69,31 +69,31 @@ export default defineComponent({
     let relationsStore: any = null;
     let collectionsStore: any = null;
 
+    const stores = useStores();
     try {
-      const stores = useStores();
       fieldsStore = stores.useFieldsStore();
       relationsStore = stores.useRelationsStore();
       collectionsStore = stores.useCollectionsStore();
-    } catch (e: any) {
-      error.value = "Failed to load Stores: " + e.message;
+    } catch (e) {
+      console.error("Error initializing stores:", e);
     }
 
     const collections = computed(() => {
-      if (!collectionsStore) {
+      if (!collectionsStore || !collectionsStore.collections) {
         return [];
       }
       return collectionsStore.collections.filter((c: any) => !c.collection.startsWith("directus_"));
     });
 
     watch(collections, (newCols) => {
-      if (newCols.length > 0 && selectedCollections.value.length === 0) {
+      if (newCols && newCols.length > 0 && selectedCollections.value && selectedCollections.value.length === 0) {
         selectedCollections.value = newCols.map((c: any) => c.collection);
       }
     }, {immediate: true});
 
     const rows = computed(() => {
       try {
-        if (!props.collection || !fieldsStore || !relationsStore) {
+        if (!props.collection || !fieldsStore || !relationsStore || !fieldsStore.fields || !relationsStore.relations) {
           return [];
         }
 
@@ -123,6 +123,7 @@ export default defineComponent({
           }
 
           let displayType = f.type || "unknown";
+
           if (relatedCollection) {
             displayType = `${f.field} (${relatedCollection})`;
           }
@@ -151,16 +152,22 @@ export default defineComponent({
     });
 
     watch(rows, (newRows) => {
-      if (newRows.length > 0 && selectedFields.value.length === 0) {
+      if (newRows && newRows.length > 0 && selectedFields.value && selectedFields.value.length === 0) {
         selectedFields.value = newRows.map((r: any) => r.field);
       }
     }, {immediate: true});
 
     const selectedRows = computed(() => {
+      if (!rows.value || !selectedFields.value) {
+        return [];
+      }
       return rows.value.filter((r: any) => selectedFields.value.includes(r.field));
     });
 
     const toggleField = (field: string) => {
+      if (!selectedFields.value) {
+        return;
+      }
       if (selectedFields.value.includes(field)) {
         selectedFields.value = selectedFields.value.filter((f) => f !== field);
       } else {
@@ -169,14 +176,17 @@ export default defineComponent({
     };
 
     const toggleAllFields = () => {
-      if (selectedFields.value.length === rows.value.length) {
+      if (rows.value && selectedFields.value && selectedFields.value.length === rows.value.length) {
         selectedFields.value = [];
-      } else {
+      } else if (rows.value) {
         selectedFields.value = rows.value.map((r: any) => r.field);
       }
     };
 
     const toggleCollection = (collection: string) => {
+      if (!selectedCollections.value) {
+        return;
+      }
       if (selectedCollections.value.includes(collection)) {
         selectedCollections.value = selectedCollections.value.filter((c) => c !== collection);
       } else {
@@ -185,6 +195,9 @@ export default defineComponent({
     };
 
     const toggleAllCollections = () => {
+      if (!selectedCollections.value || !collections.value) {
+        return;
+      }
       if (selectedCollections.value.length === collections.value.length) {
         selectedCollections.value = [];
       } else {
