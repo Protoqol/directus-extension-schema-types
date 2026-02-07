@@ -13,7 +13,7 @@
 - **Fine-grained control**: Choose specific fields or entire collections to generate schemas for.
 - **All versions of your favorite language** Java 8 up to 21, Python 3.6 up to 3.11
 
-#### See [What does the generated code look like?](#what-does-the-generated-code-look-like) for a preview.
+#### See [Generated code](#generated-code) for a preview.
 
 ---
 
@@ -30,7 +30,7 @@ There are a few different ways to install this extension:
 
 ---
 
-## What does the generated code look like?
+## Generated code
 
 Wondering what the generated code looks like?
 
