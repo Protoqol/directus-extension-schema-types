@@ -35,7 +35,7 @@ There are a few different ways to install this extension:
 Wondering what the generated code looks like?
 
 ![Preview Rust (with serde)](https://cms.protoqol.nl/assets/4b4c7d6d-6ffe-4cf4-bac0-74e3c75ae8db?v=2)
-> Converting the collection `geography` to Rust (with serde enabled, you can also export without serde). Also note the
+> Converting the collection `geography` to Rust with serde enabled - you can also export without serde. Also note the
 > automatically included geometry types, completely free of charge!
 ---
 
