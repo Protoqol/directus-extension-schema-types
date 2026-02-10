@@ -1,4 +1,4 @@
-![Title card](/.github/assets/title_card.png)
+![Title card](https://raw.githubusercontent.com/Protoqol/directus-extension-schema-types/main/.github/assets/title_card.png)
 
 ![NPM](https://img.shields.io/npm/v/%40protoqol%2Fdirectus-extension-schema-types)
 ![NPM](https://img.shields.io/github/actions/workflow/status/protoqol/directus-extension-schema-types/publish.yml)
@@ -37,12 +37,12 @@ There are a few different ways to install this extension:
 
 Wondering what the generated code looks like?
 
-![Preview Rust (with serde)](./.github/assets/preview_2.png)
+![Preview Rust (with serde)](https://raw.githubusercontent.com/Protoqol/directus-extension-schema-types/main/.github/assets/preview_2.png)
 > Converting the collection `geography` to Rust with serde enabled - you can also export without serde. Also note the
 > automatically included geometry types, completely free of charge!
 ---
 
-![Preview Python 3.9](./.github/assets/preview.png)
+![Preview Python 3.9](https://raw.githubusercontent.com/Protoqol/directus-extension-schema-types/main/.github/assets/preview.png)
 > Converting all collections to Python 3.9 has never been easier.
 ---
 
@@ -53,5 +53,6 @@ Please open an issue on this repository. We're happy to hear back from you!
 ---
 
 Developed by [Protoqol](https://protoqol.nl/).
+
 
 
