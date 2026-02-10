@@ -29,6 +29,8 @@ There are a few different ways to install this extension:
       extensions.
 2. Enable the module in Settings > Modules > Module Bar > Schema Types.
 
+> Note: You might need to set the following environment variable: `MARKETPLACE_TRUST: all`
+
 ---
 
 ## Generated code
