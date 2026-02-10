@@ -70,6 +70,7 @@ export default defineComponent({
     let collectionsStore: any = null;
 
     const stores = useStores();
+
     try {
       fieldsStore = stores.useFieldsStore();
       relationsStore = stores.useRelationsStore();
@@ -82,12 +83,15 @@ export default defineComponent({
       if (!collectionsStore || !collectionsStore.collections) {
         return [];
       }
+
       return collectionsStore.collections.filter((c: any) => !c.collection.startsWith("directus_"));
     });
 
     watch(collections, (newCols) => {
       if (newCols && newCols.length > 0 && selectedCollections.value && selectedCollections.value.length === 0) {
-        selectedCollections.value = newCols.map((c: any) => c.collection);
+        selectedCollections.value = newCols
+            .filter((c: any) => c.meta?.type !== "folder")
+            .map((c: any) => c.collection);
       }
     }, {immediate: true});
 
@@ -198,10 +202,13 @@ export default defineComponent({
       if (!selectedCollections.value || !collections.value) {
         return;
       }
-      if (selectedCollections.value.length === collections.value.length) {
+
+      const selectableCollections = collections.value.filter((c: any) => c.meta?.type !== "folder");
+
+      if (selectedCollections.value.length === selectableCollections.length) {
         selectedCollections.value = [];
       } else {
-        selectedCollections.value = collections.value.map((c: any) => c.collection);
+        selectedCollections.value = selectableCollections.map((c: any) => c.collection);
       }
     };
 

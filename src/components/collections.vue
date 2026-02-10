@@ -1,6 +1,6 @@
 <template>
   <div class="collections-container">
-    <div v-if="collections && collections.length > 0" class="table-section">
+    <div v-if="tree && tree.length > 0" class="table-section">
       <table class="v-table">
         <thead>
         <tr>
@@ -15,19 +15,40 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="col in collections" :key="col.collection" @click="$emit('toggle-collection', col.collection)">
-          <td class="selection" @click.stop>
-            <v-checkbox
-                :model-value="selectedCollections.includes(col.collection)"
-                @update:model-value="$emit('toggle-collection', col.collection)"
-            />
-          </td>
-          <td class="collection">
-            <div class="collection-name">
-              <span class="name">{{ col.collection }}</span>
-            </div>
-          </td>
-        </tr>
+        <template v-for="item in tree" :key="item.collection">
+          <tr :class="{ 'folder-row': item.meta && item.meta.type === 'folder' }"
+              @click="item.meta && item.meta.type !== 'folder' ? $emit('toggle-collection', item.collection) : null">
+            <td class="selection" @click.stop>
+              <v-checkbox
+                  v-if="item.meta && item.meta.type !== 'folder'"
+                  :model-value="selectedCollections.includes(item.collection)"
+                  @update:model-value="$emit('toggle-collection', item.collection)"
+              />
+            </td>
+            <td class="collection">
+              <div class="collection-name">
+                <v-icon
+                    :name="item.meta && item.meta.icon ? item.meta.icon : (item.meta && item.meta.type === 'folder' ? 'folder' : 'database')"/>
+                <span class="name">{{ item.name }}</span>
+              </div>
+            </td>
+          </tr>
+          <tr v-for="child in item.children" :key="child.collection"
+              @click="$emit('toggle-collection', child.collection)">
+            <td class="selection" @click.stop>
+              <v-checkbox
+                  :model-value="selectedCollections.includes(child.collection)"
+                  @update:model-value="$emit('toggle-collection', child.collection)"
+              />
+            </td>
+            <td class="collection">
+              <div class="collection-name child-name">
+                <v-icon :name="child.meta && child.meta.icon ? child.meta.icon : 'database'"/>
+                <span class="name">{{ child.name }}</span>
+              </div>
+            </td>
+          </tr>
+        </template>
         </tbody>
       </table>
     </div>
@@ -55,15 +76,44 @@ export default defineComponent({
   },
   emits: ["toggle-collection", "toggle-all"],
   setup(props) {
+    const tree = computed(() => {
+      const items = props.collections.map((c: any) => ({
+        ...c,
+        name    : c.meta?.display_name || c.collection,
+        children: [] as any[],
+      }));
+
+      const root: any[] = [];
+      const map: Record<string, any> = {};
+
+      items.forEach((item: any) => {
+        map[item.collection] = item;
+      });
+
+      items.forEach((item: any) => {
+        const parentId = item.meta?.group;
+        if (parentId && map[parentId]) {
+          map[parentId].children.push(item);
+        } else {
+          root.push(item);
+        }
+      });
+
+      return root;
+    });
+
     const allSelected = computed(() => {
-      return props.collections.length > 0 && props.selectedCollections.length === props.collections.length;
+      const selectableCollections = props.collections.filter((c: any) => c.meta?.type !== "folder");
+      return selectableCollections.length > 0 && props.selectedCollections.length === selectableCollections.length;
     });
 
     const someSelected = computed(() => {
-      return props.selectedCollections.length > 0 && props.selectedCollections.length < props.collections.length;
+      const selectableCollections = props.collections.filter((c: any) => c.meta?.type !== "folder");
+      return props.selectedCollections.length > 0 && props.selectedCollections.length < selectableCollections.length;
     });
 
     return {
+      tree,
       allSelected,
       someSelected,
     };
@@ -138,5 +188,14 @@ export default defineComponent({
   font-family: var(--theme--fonts--monospace--font-family);
   font-size: 14px;
   color: var(--theme--foreground);
+}
+
+.child-name {
+  padding-left: 32px;
+}
+
+.folder-row {
+  background-color: var(--theme--background-subdued);
+  cursor: default !important;
 }
 </style>
