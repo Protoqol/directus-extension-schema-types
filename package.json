@@ -14,7 +14,7 @@
     "directus-extension",
     "directus-extension-module"
   ],
-  "type"              : "module",
+  "type"              : "module"
   "files"             : [
     "dist"
   ],
