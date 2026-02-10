@@ -90,7 +90,7 @@ export default defineComponent({
     watch(collections, (newCols) => {
       if (newCols && newCols.length > 0 && selectedCollections.value && selectedCollections.value.length === 0) {
         selectedCollections.value = newCols
-            .filter((c: any) => c.meta?.type !== "folder")
+            .filter((c: any) => c.type !== "alias")
             .map((c: any) => c.collection);
       }
     }, {immediate: true});
@@ -175,7 +175,7 @@ export default defineComponent({
       if (selectedFields.value.includes(field)) {
         selectedFields.value = selectedFields.value.filter((f) => f !== field);
       } else {
-        selectedFields.value.push(field);
+        selectedFields.value = [...selectedFields.value, field];
       }
     };
 
@@ -194,7 +194,7 @@ export default defineComponent({
       if (selectedCollections.value.includes(collection)) {
         selectedCollections.value = selectedCollections.value.filter((c) => c !== collection);
       } else {
-        selectedCollections.value.push(collection);
+        selectedCollections.value = [...selectedCollections.value, collection];
       }
     };
 
@@ -203,7 +203,7 @@ export default defineComponent({
         return;
       }
 
-      const selectableCollections = collections.value.filter((c: any) => c.meta?.type !== "folder");
+      const selectableCollections = collections.value.filter((c: any) => c.type !== "folder");
 
       if (selectedCollections.value.length === selectableCollections.length) {
         selectedCollections.value = [];

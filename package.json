@@ -8,7 +8,7 @@
   "description"       : "Directus extension to generate schemas/types for TypeScript, Rust, PHP, C#, Java, Python, Go, Kotlin, C++, Ruby, SQL, and GraphQL.",
   "license"           : "MIT",
   "icon"              : "extension",
-  "version"           : "1.1.8",
+  "version"           : "1.1.9",
   "keywords"          : [
     "directus",
     "directus-extension",
@@ -38,6 +38,7 @@
     "vue-tsc"                 : "^3.2.4"
   },
   "dependencies"      : {
-    "@highlightjs/vue-plugin": "^2.1.0"
+    "@highlightjs/vue-plugin": "^2.1.0",
+    "vue-router"             : "^4.6.3"
   }
 }

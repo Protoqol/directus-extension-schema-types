@@ -16,11 +16,11 @@
         </thead>
         <tbody>
         <template v-for="item in tree" :key="item.collection">
-          <tr :class="{ 'folder-row': item.meta && item.meta.type === 'folder' }"
-              @click="item.meta && item.meta.type !== 'folder' ? $emit('toggle-collection', item.collection) : null">
+          <tr :class="{ 'folder-row': item.type === 'alias' }"
+              @click="item.meta && item.type !== 'alias' ? $emit('toggle-collection', item.collection) : null">
             <td class="selection" @click.stop>
               <v-checkbox
-                  v-if="item.meta && item.meta.type !== 'folder'"
+                  v-if="item.type !== 'alias'"
                   :model-value="selectedCollections.includes(item.collection)"
                   @update:model-value="$emit('toggle-collection', item.collection)"
               />
@@ -28,12 +28,13 @@
             <td class="collection">
               <div class="collection-name">
                 <v-icon
-                    :name="item.meta && item.meta.icon ? item.meta.icon : (item.meta && item.meta.type === 'folder' ? 'folder' : 'database')"/>
+                    :name="item.meta.icon ? item.meta.icon : (item.type === 'alias' ? 'folder' : 'database')"/>
                 <span class="name">{{ item.name }}</span>
               </div>
             </td>
           </tr>
           <tr v-for="child in item.children" :key="child.collection"
+              class="child-row"
               @click="$emit('toggle-collection', child.collection)">
             <td class="selection" @click.stop>
               <v-checkbox
@@ -63,7 +64,8 @@
 import {computed, defineComponent} from "vue";
 
 export default defineComponent({
-  name : "collections",
+  name: "collections",
+
   props: {
     collections        : {
       type   : Array<{ collection: string }>,
@@ -74,7 +76,9 @@ export default defineComponent({
       default: () => [],
     },
   },
+
   emits: ["toggle-collection", "toggle-all"],
+
   setup(props) {
     const tree = computed(() => {
       const items = props.collections.map((c: any) => ({
@@ -92,6 +96,7 @@ export default defineComponent({
 
       items.forEach((item: any) => {
         const parentId = item.meta?.group;
+
         if (parentId && map[parentId]) {
           map[parentId].children.push(item);
         } else {
@@ -103,12 +108,12 @@ export default defineComponent({
     });
 
     const allSelected = computed(() => {
-      const selectableCollections = props.collections.filter((c: any) => c.meta?.type !== "folder");
+      const selectableCollections = props.collections.filter((c: any) => c.type !== "alias");
       return selectableCollections.length > 0 && props.selectedCollections.length === selectableCollections.length;
     });
 
     const someSelected = computed(() => {
-      const selectableCollections = props.collections.filter((c: any) => c.meta?.type !== "folder");
+      const selectableCollections = props.collections.filter((c: any) => c.type !== "alias");
       return props.selectedCollections.length > 0 && props.selectedCollections.length < selectableCollections.length;
     });
 
@@ -135,6 +140,14 @@ export default defineComponent({
   width: 100%;
   border-collapse: separate;
   border-spacing: 0 8px;
+}
+
+.folder-row, .child-row {
+  cursor: pointer;
+}
+
+.folder-row:hover, .child-row:hover {
+  background-color: var(--theme--background-subdued);
 }
 
 .v-table thead th {

@@ -1,5 +1,5 @@
 <template>
-  <v-list nav>
+  <v-list v-model:opened="opened" nav>
     <v-list-item key="main" exact to="/protoqol/schema">
       <v-list-item-icon>
         <v-icon name="data_table"/>
@@ -15,14 +15,17 @@
       <v-list-group
           v-if="item.children && item.children.length > 0"
           :active="isWithinGroup(item)"
-          :clickable="item.meta && item.meta.type !== 'folder'"
+          :clickable="item.meta && item.type !== 'alias'"
           :value="item.collection"
-          @click="item.meta && item.meta.type !== 'folder' ? $router.push(`/protoqol/schema/${item.collection}`) : null"
+          @click="() => {
+            console.log(item);
+            return item.type !== 'alias' ? $router.push(`/protoqol/schema/${item.collection}`) : null
+          }"
       >
         <template #activator>
           <v-list-item-icon>
             <v-icon
-                :name="item.meta && item.meta.icon ? item.meta.icon : (item.meta && item.meta.type === 'folder' ? 'folder' : 'database')"/>
+                :name="item.meta && item.meta.icon ? item.meta.icon : (item.meta && item.type === 'alias' ? 'folder' : 'database')"/>
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>{{ item.name }}</v-list-item-title>
@@ -51,7 +54,7 @@
       >
         <v-list-item-icon>
           <v-icon
-              :name="item.meta && item.meta.icon ? item.meta.icon : (item.meta && item.meta.type === 'folder' ? 'folder' : 'database')"/>
+              :name="item.meta && item.meta.icon ? item.meta.icon : (item.meta && item.type === 'alias' ? 'folder' : 'database')"/>
         </v-list-item-icon>
         <v-list-item-content>
           <v-list-item-title>{{ item.name }}</v-list-item-title>
@@ -62,7 +65,7 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent} from "vue";
+import {computed, defineComponent, ref, watch} from "vue";
 import {useStores} from "@directus/extensions-sdk";
 import {useRouter} from "vue-router";
 
@@ -77,6 +80,8 @@ export default defineComponent({
     const {useCollectionsStore} = useStores();
     const collectionsStore = useCollectionsStore();
     const router = useRouter();
+
+    const opened = ref<string[]>([]);
 
     const collections = computed(() => {
       if (!collectionsStore || !collectionsStore.collections) {
@@ -111,6 +116,18 @@ export default defineComponent({
       return root;
     });
 
+    watch(tree, (newTree) => {
+      if (newTree && newTree.length > 0) {
+        const groupIds = newTree
+            .filter((item: any) => item.children && item.children.length > 0)
+            .map((item: any) => item.collection);
+
+        const currentOpened = new Set(opened.value);
+        groupIds.forEach(id => currentOpened.add(id));
+        opened.value = Array.from(currentOpened);
+      }
+    }, {immediate: true});
+
     const isWithinGroup = (item: any) => {
       if (props.collection === item.collection) {
         return true;
@@ -120,6 +137,7 @@ export default defineComponent({
 
     return {
       tree,
+      opened,
       isWithinGroup,
       $router: router,
     };
