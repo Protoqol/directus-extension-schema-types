@@ -5,7 +5,10 @@
     "email": "open-source@protoqol.nl",
     "url"  : "https://protoqol.nl"
   },
-  "repository"        : "@protoqol/directus-extension-schema-types",
+  "repository"        : {
+    "type": "git",
+    "url" : "https://github.com/Protoqol/directus-extension-schema-types"
+  },
   "description"       : "Directus extension to generate schemas/types for TypeScript, Rust, PHP, C#, Java, Python, Go, Kotlin, C++, Ruby, SQL, and GraphQL.",
   "license"           : "MIT",
   "icon"              : "extension",
